@@ -1,4 +1,4 @@
-// Copyright (c) 2016, 2019 Tigera, Inc. All rights reserved.
+// Copyright (c) 2016-2024 Tigera, Inc. All rights reserved.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ const (
 	TokAnd
 	TokOr
 	TokGlobal
+	TokSelf
 	TokEOF
 )
 
@@ -68,6 +69,7 @@ const (
 	notInExpr       = `not\s*in\b`
 	inExpr          = `in\b`
 	globalExpr      = `global\(\s*\)`
+	selfExpr        = `self\(\s*\)`
 )
 
 var (
@@ -80,6 +82,7 @@ var (
 	notInRegex      = regexp.MustCompile("^" + notInExpr)
 	inRegex         = regexp.MustCompile("^" + inExpr)
 	globalRegex     = regexp.MustCompile("^" + globalExpr)
+	selfRegex       = regexp.MustCompile("^" + selfExpr)
 )
 
 // Tokenize transforms string to token slice
@@ -205,6 +208,10 @@ func Tokenize(input string) (tokens []Token, err error) {
 			} else if idxs := globalRegex.FindStringIndex(input); idxs != nil {
 				// Found "global"
 				tokens = append(tokens, Token{TokGlobal, nil})
+				input = input[idxs[1]:]
+			} else if idxs := selfRegex.FindStringIndex(input); idxs != nil {
+				// Found "self"
+				tokens = append(tokens, Token{TokSelf, nil})
 				input = input[idxs[1]:]
 			} else if idxs := identifierRegex.FindStringIndex(input); idxs != nil {
 				// Found "label"

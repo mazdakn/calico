@@ -150,6 +150,9 @@ func parseOperation(tokens []tokenizer.Token) (sel node, remTokens []tokenizer.T
 	case tokenizer.TokGlobal:
 		sel = &GlobalNode{}
 		remTokens = tokens[1:]
+	case tokenizer.TokSelf:
+		sel = &SelfNode{}
+		remTokens = tokens[1:]
 	case tokenizer.TokLabel:
 		// should have an operator and a literal.
 		if len(tokens) < 3 {

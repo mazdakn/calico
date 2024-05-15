@@ -131,6 +131,9 @@ var selectorTests = []selectorTest{
 	{`global()`, []map[string]string{{}}, []map[string]string{}},
 	{` global()`, []map[string]string{{}}, []map[string]string{}},
 	{` global()`, []map[string]string{{"a": "b"}}, []map[string]string{}},
+	{`self()`, []map[string]string{{}}, []map[string]string{}},
+	{` self()`, []map[string]string{{}}, []map[string]string{}},
+	{` self()`, []map[string]string{{"a": "b"}}, []map[string]string{}},
 
 	{`a == 'a'`, []map[string]string{}, []map[string]string{{"a": "b"}}},
 	{`a == 'a'`, []map[string]string{}, []map[string]string{{}}},
