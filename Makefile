@@ -42,13 +42,13 @@ endif
 
 ###############################################################################
 DOCKERFILE ?= Dockerfile.$(ARCH)
-VERSION ?= v5.3
+VERSION ?= v7.4.0
 DEFAULTORG ?= calico
 DEFAULTIMAGE ?= $(DEFAULTORG)/bpftool:$(VERSION)
 ARCHIMAGE ?= $(DEFAULTIMAGE)-$(ARCH)
 BPFTOOLIMAGE ?= $(DEFAULTIMAGE)-$(BUILDARCH)
-KERNELREF ?= $(VERSION)
-KERNELREPO ?= git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+SOURCEREF ?= $(VERSION)
+SOURCEREPO ?= git@github.com:libbpf/bpftool.git
 
 MANIFEST_TOOL_VERSION := v0.7.0
 MANIFEST_TOOL_DIR := $(shell mktemp -d)
@@ -74,7 +74,7 @@ image: $(DEFAULTORG)/bpftool
 $(DEFAULTORG)/bpftool: register
 	# Make sure we re-pull the base image to pick up security fixes.
 	# Limit the build to use only one CPU, This helps to work around qemu bugs such as https://bugs.launchpad.net/qemu/+bug/1098729
-	docker build $(DOCKER_BUILD_ARGS) --build-arg KERNEL_REF=$(KERNELREF) --build-arg KERNEL_REPO=$(KERNELREPO) --cpuset-cpus 0 --pull -t $(ARCHIMAGE) -f $(DOCKERFILE) .
+	docker build $(DOCKER_BUILD_ARGS) --build-arg SOURCE_REF=$(SOURCEREF) --build-arg SOURCE_REPO=$(SOURCEREPO) --cpuset-cpus 0 --pull -t $(ARCHIMAGE) -f $(DOCKERFILE) .
 
 image-all: $(addprefix sub-image-,$(ARCHES))
 sub-image-%:
