@@ -48,7 +48,7 @@ DEFAULTIMAGE ?= $(DEFAULTORG)/bpftool:$(VERSION)
 ARCHIMAGE ?= $(DEFAULTIMAGE)-$(ARCH)
 BPFTOOLIMAGE ?= $(DEFAULTIMAGE)-$(BUILDARCH)
 SOURCEREF ?= $(VERSION)
-SOURCEREPO ?= git@github.com:libbpf/bpftool.git
+SOURCEREPO ?= https://github.com/libbpf/bpftool.git
 
 MANIFEST_TOOL_VERSION := v0.7.0
 MANIFEST_TOOL_DIR := $(shell mktemp -d)

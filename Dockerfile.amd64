@@ -1,4 +1,4 @@
-# Copyright (c) 2019 Tigera, Inc. All rights reserved.
+# Copyright (c) 2019-2024 Tigera, Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 FROM debian:buster-slim as bpftool-build
-ARG SOURCE_REPO=git@github.com:libbpf/bpftool.git
+ARG SOURCE_REPO=https://github.com/libbpf/bpftool.git
 ARG SOURCE_REF=master
 RUN apt-get update && \
 apt-get upgrade -y && \
@@ -25,7 +25,7 @@ apt-get clean
 
 WORKDIR /tmp
 
-RUN git clone --recurse-submodules --depth 1 -b $SOURCE_REF $SOURCE_REPO 
+RUN git clone --recurse-submodules --depth 1 -b $SOURCE_REF $SOURCE_REPO
 RUN cd bpftool/src && EXTRA_CFLAGS=--static OUTPUT=/usr/bin/bpftool make
 RUN strip bpftool && \
 ldd bpftool 2>&1 | grep -q -e "Not a valid dynamic program" \
