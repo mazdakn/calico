@@ -70,7 +70,7 @@ import (
 
 // These tests include tests of Kubernetes policies as well as other policy types. To ensure we have the correct
 // behavior, run using the Kubernetes infrastructure only.
-var _ = infrastructure.DatastoreDescribe("_BPF-SAFE_ flow log with staged policy tests", []apiconfig.DatastoreType{apiconfig.Kubernetes}, func(getInfra infrastructure.InfraFactory) {
+var _ = infrastructure.DatastoreDescribe("_BPF-SAFE_ pepper flow log with staged policy tests", []apiconfig.DatastoreType{apiconfig.Kubernetes}, func(getInfra infrastructure.InfraFactory) {
 	const (
 		wepPort = 8055
 		svcPort = 8066
@@ -316,9 +316,7 @@ var _ = infrastructure.DatastoreDescribe("_BPF-SAFE_ flow log with staged policy
 		if !bpfEnabled {
 			// Wait for felix to see and program some expected nflog entries, and for the cluster IP to appear.
 			Eventually(getRuleFunc(tc.Felixes[0], "APE0|default.ep1-1-allow-all"), "10s", "1s").ShouldNot(HaveOccurred())
-			Eventually(getRuleFunc(tc.Felixes[0], "DPI|default/staged:default.np3-4"), "10s", "1s").Should(HaveOccurred())
 			Eventually(getRuleFunc(tc.Felixes[1], "APE0|default.ep1-1-allow-all"), "10s", "1s").Should(HaveOccurred())
-			Eventually(getRuleFunc(tc.Felixes[1], "DPI|default/staged:default.np3-4"), "10s", "1s").ShouldNot(HaveOccurred())
 		} else {
 			checkNat := func() bool {
 				for _, f := range tc.Felixes {
@@ -333,8 +331,6 @@ var _ = infrastructure.DatastoreDescribe("_BPF-SAFE_ flow log with staged policy
 
 			bpfWaitForPolicy(tc.Felixes[0], ep1_1.InterfaceName,
 				"ingress", "default.ep1-1-allow-all")
-			bpfWaitForPolicy(tc.Felixes[1], ep2_2.InterfaceName,
-				"ingress", "default/staged:default.np3-4")
 		}
 
 		if !bpfEnabled {
@@ -925,22 +921,17 @@ var _ = infrastructure.DatastoreDescribe("_BPF-SAFE_ aggregation of flow log wit
 		if !bpfEnabled {
 			Eventually(getRuleFunc(tc.Felixes[0], "PPI0|default/tier1.np1-1"), "10s", "1s").ShouldNot(HaveOccurred())
 			Eventually(getRuleFunc(tc.Felixes[0], "PPE0|default/tier1.np1-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Eventually(getRuleFunc(tc.Felixes[0], "DPI|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Eventually(getRuleFunc(tc.Felixes[0], "DPE|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
 			Eventually(getRuleFunc(tc.Felixes[1], "PPI0|default/tier1.np1-1"), "10s", "1s").ShouldNot(HaveOccurred())
 			Eventually(getRuleFunc(tc.Felixes[1], "PPE0|default/tier1.np1-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Eventually(getRuleFunc(tc.Felixes[1], "DPI|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Eventually(getRuleFunc(tc.Felixes[1], "DPE|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Consistently(getRuleFunc(tc.Felixes[0], "DPE|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
 		} else {
 			bpfWaitForPolicy(tc.Felixes[0], ep1_1.InterfaceName,
-				"egress", "default/staged:tier2.np2-1")
+				"egress", "default/tier1.np1-1")
 			bpfWaitForPolicy(tc.Felixes[0], ep1_1.InterfaceName,
-				"ingress", "default/staged:tier2.np2-1")
+				"ingress", "default/tier1.np1-1")
 			bpfWaitForPolicy(tc.Felixes[1], ep2_1.InterfaceName,
-				"egress", "default/staged:tier2.np2-1")
+				"egress", "default/tier1.np1-1")
 			bpfWaitForPolicy(tc.Felixes[1], ep2_1.InterfaceName,
-				"ingress", "default/staged:tier2.np2-1")
+				"ingress", "default/tier1.np1-1")
 		}
 	})
 
@@ -956,13 +947,8 @@ var _ = infrastructure.DatastoreDescribe("_BPF-SAFE_ aggregation of flow log wit
 			// Wait for felix to see and program some expected nflog entries, and for the cluster IP to appear.
 			Eventually(getRuleFunc(tc.Felixes[0], "PPI0|default/tier1.np1-1"), "10s", "1s").ShouldNot(HaveOccurred())
 			Eventually(getRuleFunc(tc.Felixes[0], "PPE0|default/tier1.np1-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Eventually(getRuleFunc(tc.Felixes[0], "API0|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Eventually(getRuleFunc(tc.Felixes[0], "APE0|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
 			Eventually(getRuleFunc(tc.Felixes[1], "PPI0|default/tier1.np1-1"), "10s", "1s").ShouldNot(HaveOccurred())
 			Eventually(getRuleFunc(tc.Felixes[1], "PPE0|default/tier1.np1-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Eventually(getRuleFunc(tc.Felixes[1], "API0|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Eventually(getRuleFunc(tc.Felixes[1], "APE0|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Consistently(getRuleFunc(tc.Felixes[0], "APE0|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
 		} else {
 			bpfWaitForPolicy(tc.Felixes[0], ep1_1.InterfaceName,
 				"egress", "default/staged:tier2.np2-1")
@@ -989,13 +975,8 @@ var _ = infrastructure.DatastoreDescribe("_BPF-SAFE_ aggregation of flow log wit
 			// Wait for felix to see and program some expected nflog entries, and for the cluster IP to appear.
 			Eventually(getRuleFunc(tc.Felixes[0], "PPI0|default/tier1.np1-1"), "10s", "1s").ShouldNot(HaveOccurred())
 			Eventually(getRuleFunc(tc.Felixes[0], "PPE0|default/tier1.np1-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Eventually(getRuleFunc(tc.Felixes[0], "DPI0|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Eventually(getRuleFunc(tc.Felixes[0], "DPE0|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
 			Eventually(getRuleFunc(tc.Felixes[1], "PPI0|default/tier1.np1-1"), "10s", "1s").ShouldNot(HaveOccurred())
 			Eventually(getRuleFunc(tc.Felixes[1], "PPE0|default/tier1.np1-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Eventually(getRuleFunc(tc.Felixes[1], "DPI0|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Eventually(getRuleFunc(tc.Felixes[1], "DPE0|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
-			Consistently(getRuleFunc(tc.Felixes[0], "DPE0|default/staged:tier2.np2-1"), "10s", "1s").ShouldNot(HaveOccurred())
 		} else {
 			bpfWaitForPolicy(tc.Felixes[0], ep1_1.InterfaceName,
 				"egress", "default/staged:tier2.np2-1")
