@@ -65,7 +65,7 @@ func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ctl",
 		Short: "Calico CLI tool for managing Calico resources",
-		Long: `The calicoctl command line tool is used to manage Calico network and security
+		Long: Logo + `The calicoctl command line tool is used to manage Calico network and security
 policy, to view and manage endpoint configuration, and to manage a Calico
 node instance.`,
 		SilenceUsage:  true,

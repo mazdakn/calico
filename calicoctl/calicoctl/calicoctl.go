@@ -67,6 +67,10 @@ Description:
 	// Replace all instances of BINARY_NAME with the name of the binary.
 	doc = strings.ReplaceAll(doc, "<BINARY_NAME>", name)
 
+	// Show the Calico banner above the top-level help/usage output. Text before
+	// the "Usage:" section is ignored by docopt's parser.
+	doc = commands.Logo + doc
+
 	parser := &docopt.Parser{
 		HelpHandler:   docopt.PrintHelpOnly,
 		OptionsFirst:  true,
