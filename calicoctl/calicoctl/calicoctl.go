@@ -43,6 +43,7 @@ func main() {
     label        Add or update labels of resources.
     validate     Validate a resource by file, directory or stdin without applying it.
     convert      Convert third-party (e.g. Cilium) network policies to Calico resources.
+    install      Install Calico on a fresh cluster via the tigera operator.
     ipam         IP address management.
     node         Calico node management.
     version      Display the version of this binary.
@@ -131,6 +132,8 @@ Description:
 			err = commands.Validate(args)
 		case "convert":
 			err = commands.Convert(args)
+		case "install":
+			err = commands.Install(args)
 		case "version":
 			err = commands.Version(args)
 		case "node":

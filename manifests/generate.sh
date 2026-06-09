@@ -183,3 +183,15 @@ for img in $NON_HELM_MANIFEST_IMAGES; do
   echo "Update $img image to $new_img:$CALICO_VERSION"
   find . -type f -exec sed -i "s|image: [a-zA-Z0-9/._-]*/${img}:[A-Za-z0-9_.-]*|image: ${new_img}:$CALICO_VERSION|g" {} \;
 done
+
+##########################################################################
+# Stage operator install manifests into calicoctl for `calicoctl install`.
+# These embedded copies (committed) keep the binary self-contained and
+# version-matched. Keep this list in sync with calicoctl/.../install/embed.go.
+##########################################################################
+echo "Staging operator install manifests into calicoctl"
+INSTALL_MANIFEST_DIR=../calicoctl/calicoctl/commands/install/manifests
+mkdir -p "$INSTALL_MANIFEST_DIR"
+for f in operator-crds.yaml tigera-operator.yaml custom-resources.yaml; do
+  cp "$f" "$INSTALL_MANIFEST_DIR/$f"
+done
