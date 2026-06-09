@@ -44,6 +44,8 @@ func main() {
     validate     Validate a resource by file, directory or stdin without applying it.
     convert      Convert third-party (e.g. Cilium) network policies to Calico resources.
     install      Install Calico on a fresh cluster via the tigera operator.
+    uninstall    Remove an operator-based Calico install from the cluster.
+    status       Show the status of the Calico install on the cluster.
     ipam         IP address management.
     node         Calico node management.
     version      Display the version of this binary.
@@ -134,6 +136,10 @@ Description:
 			err = commands.Convert(args)
 		case "install":
 			err = commands.Install(args)
+		case "uninstall":
+			err = commands.Uninstall(args)
+		case "status":
+			err = commands.Status(args)
 		case "version":
 			err = commands.Version(args)
 		case "node":

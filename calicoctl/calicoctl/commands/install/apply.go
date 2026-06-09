@@ -131,6 +131,58 @@ func (a *applier) applyObject(ctx context.Context, obj *unstructured.Unstructure
 	return res, nil
 }
 
+// deleteYAML decodes a multi-document manifest and deletes the objects in
+// reverse dependency order (custom resources first, CRDs/Namespaces last), so a
+// dependency is never removed before the things that need it.
+func (a *applier) deleteYAML(ctx context.Context, manifest []byte) ([]applyResult, error) {
+	objs, err := decodeManifest(manifest)
+	if err != nil {
+		return nil, err
+	}
+	sortObjectsReverse(objs)
+
+	results := make([]applyResult, 0, len(objs))
+	for i := range objs {
+		res, err := a.deleteObject(ctx, &objs[i])
+		if err != nil {
+			return results, err
+		}
+		results = append(results, res)
+	}
+	return results, nil
+}
+
+// deleteObject deletes a single object. It is idempotent: a missing object (or a
+// missing CRD, i.e. no REST mapping) is reported as skipped, not an error.
+func (a *applier) deleteObject(ctx context.Context, obj *unstructured.Unstructured) (applyResult, error) {
+	gvk := obj.GroupVersionKind()
+	res := applyResult{gvk: gvk, name: obj.GetName()}
+
+	ri, err := a.resourceFor(obj)
+	if err != nil {
+		// The CRD (and therefore the resource type) is already gone — nothing to delete.
+		if meta.IsNoMatchError(err) {
+			res.skipped = true
+			return res, nil
+		}
+		return res, fmt.Errorf("%s: %w", res, err)
+	}
+
+	opts := metav1.DeleteOptions{}
+	if a.dryRun {
+		opts.DryRun = []string{metav1.DryRunAll}
+	}
+
+	if err := ri.Delete(ctx, obj.GetName(), opts); err != nil {
+		if apierrors.IsNotFound(err) {
+			res.skipped = true
+			return res, nil
+		}
+		return res, fmt.Errorf("%s: %w", res, err)
+	}
+	return res, nil
+}
+
 // resourceFor resolves the dynamic resource interface (GVR + namespacing) for an
 // object using the RESTMapper.
 func (a *applier) resourceFor(obj *unstructured.Unstructured) (dynamic.ResourceInterface, error) {
@@ -269,6 +321,31 @@ func applyRank(obj *unstructured.Unstructured) int {
 func sortObjects(objs []unstructured.Unstructured) {
 	sort.SliceStable(objs, func(i, j int) bool {
 		return applyRank(&objs[i]) < applyRank(&objs[j])
+	})
+}
+
+// sortObjectsReverse orders objects for deletion: the reverse of apply order, so
+// custom resources go first and CRDs/Namespaces last.
+func sortObjectsReverse(objs []unstructured.Unstructured) {
+	sort.SliceStable(objs, func(i, j int) bool {
+		return applyRank(&objs[i]) > applyRank(&objs[j])
+	})
+}
+
+// waitForNamespaceGone blocks until the named namespace no longer exists, used
+// to let the operator finish tearing down its managed components before the
+// operator itself is removed.
+func (a *applier) waitForNamespaceGone(ctx context.Context, name string, timeout time.Duration) error {
+	nsGVR := schema.GroupVersionResource{Group: "", Version: "v1", Resource: "namespaces"}
+	return wait.PollUntilContextTimeout(ctx, 3*time.Second, timeout, true, func(ctx context.Context) (bool, error) {
+		_, err := a.dyn.Resource(nsGVR).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				return true, nil
+			}
+			return false, err
+		}
+		return false, nil
 	})
 }
 

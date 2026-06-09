@@ -100,6 +100,46 @@ func TestSortObjects(t *testing.T) {
 	}
 }
 
+func TestSortObjectsReverse(t *testing.T) {
+	mk := func(group, kind string) unstructured.Unstructured {
+		o := unstructured.Unstructured{}
+		o.SetGroupVersionKind(schema.GroupVersionKind{Group: group, Version: "v1", Kind: kind})
+		return o
+	}
+	objs := []unstructured.Unstructured{
+		mk("apiextensions.k8s.io", "CustomResourceDefinition"),
+		mk("", "Namespace"),
+		mk("operator.tigera.io", "Installation"),
+		mk("apps", "Deployment"),
+	}
+	sortObjectsReverse(objs)
+	got := []string{objs[0].GetKind(), objs[1].GetKind(), objs[2].GetKind(), objs[3].GetKind()}
+	want := []string{"Installation", "Deployment", "Namespace", "CustomResourceDefinition"}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("delete order = %v, want %v", got, want)
+		}
+	}
+}
+
+func TestDeleteObject_IgnoresMissing(t *testing.T) {
+	// An empty fake client has no objects, so delete should report skipped, not error.
+	dyn := dynamicfake.NewSimpleDynamicClient(runtime.NewScheme())
+	a := &applier{mapper: newTestMapper(), dyn: dyn}
+
+	ns := unstructured.Unstructured{}
+	ns.SetGroupVersionKind(schema.GroupVersionKind{Group: "", Version: "v1", Kind: "Namespace"})
+	ns.SetName("tigera-operator")
+
+	res, err := a.deleteObject(context.Background(), &ns)
+	if err != nil {
+		t.Fatalf("delete of missing object errored: %v", err)
+	}
+	if !res.skipped {
+		t.Error("expected delete of missing object to be reported as skipped")
+	}
+}
+
 func TestResourceFor_Scope(t *testing.T) {
 	a := &applier{mapper: newTestMapper(), dyn: dynamicfake.NewSimpleDynamicClient(runtime.NewScheme())}
 

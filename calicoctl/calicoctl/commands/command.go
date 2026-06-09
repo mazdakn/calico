@@ -107,6 +107,8 @@ node instance.`,
 	// Router commands.
 	cmd.AddCommand(
 		newInstallCommand(),
+		newUninstallCommand(),
+		newStatusCommand(),
 		newIPAMCommand(),
 		newNodeCommand(),
 		newDatastoreCommand(),
