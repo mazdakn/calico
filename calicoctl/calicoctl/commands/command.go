@@ -101,6 +101,7 @@ node instance.`,
 		newPatchCommand(),
 		newLabelCommand(),
 		newValidateCommand(),
+		newConvertCommand(),
 	)
 
 	// Router commands.

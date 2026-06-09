@@ -1,0 +1,18 @@
+# A CiliumNetworkPolicy using toFQDNs, which has no faithful Calico equivalent.
+# Converting this file must fail with a descriptive error and produce no output.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-fqdn
+  namespace: prod
+spec:
+  endpointSelector:
+    matchLabels:
+      app: web
+  egress:
+    - toFQDNs:
+        - matchName: api.example.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
